@@ -1,0 +1,54 @@
+#include <SPI.h>
+#include <LoRa.h>
+ 
+//Libraries for LoRa
+#include "DHT.h"
+#define DHTPIN 4         
+DHT dht(DHTPIN, DHT11);
+ 
+ 
+#define BAND 433E6    
+ 
+//packet counter
+int readingID = 0;
+ 
+int counter = 0;
+String LoRaMessage = "";
+ 
+float temperature = 0;
+float humidity = 0;
+ 
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  while (!Serial);
+  Serial.println("LoRa Emisor");
+ 
+  if (!LoRa.begin(433E6)) {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
+}
+
+void loop() {
+    humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+  Serial.print(F("Humedad: "));
+  Serial.print(humidity);
+  Serial.print(F("%  Temperatura: "));
+  Serial.print(temperature);
+  Serial.println(F("°C "));
+
+  
+   LoRaMessage = String(readingID) + "/" + String(temperature) + "&" + String(humidity) ;
+  //Send LoRa packet to receiver
+  LoRa.beginPacket();
+  LoRa.print(LoRaMessage);
+  LoRa.endPacket();
+  
+  Serial.print("Sending packet: ");
+  Serial.println(readingID);
+  readingID++;
+  Serial.println(LoRaMessage);
+  delay(3000);
+}
